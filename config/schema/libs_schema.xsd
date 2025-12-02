@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           elementFormDefault="qualified">
+
+    <!-- ELEMENTO RAÍZ -->
+    <xs:element name="component" type="componentType"/>
+
+    <!-- TIPO PRINCIPAL DE COMPONENTE -->
+    <xs:complexType name="componentType">
+        <xs:sequence>
+            <xs:element name="filename" type="xs:string"/>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="version" type="xs:string"/>
+            <xs:element name="path" type="xs:string"/>
+
+            <xs:element name="hashes" type="hashesType" minOccurs="0"/>
+            <xs:element name="externalReferences" type="externalRefsType" minOccurs="0"/>
+            <xs:element name="dependencies" type="dependenciesType"/>
+        </xs:sequence>
+
+        <xs:attribute name="type" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <!-- HASHES -->
+    <xs:complexType name="hashesType">
+        <xs:sequence>
+            <xs:element name="hash" type="hashType" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="hashType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute name="alg" type="xs:string" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <!-- EXTERNAL REFERENCES -->
+    <xs:complexType name="externalRefsType">
+        <xs:sequence>
+            <xs:element name="reference" type="referenceType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="referenceType">
+        <xs:sequence>
+            <xs:element name="filename" type="xs:string"/>
+            <xs:element name="url" type="xs:string"/>
+            <xs:element name="comment" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- DEPENDENCIAS: COMPONENTES ANIDADOS -->
+    <xs:complexType name="dependenciesType">
+        <xs:sequence>
+            <xs:element name="component" type="componentType" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+</xs:schema>

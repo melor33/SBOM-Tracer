@@ -1,0 +1,5 @@
+config/lib_lists
+config/report
+data/
+venv/
+.env
