@@ -1063,11 +1063,11 @@ class SBOMGenerator(object):
     def _add_root_dependency(self):
         """Add root component as parent of all components"""
         root_ref = self.sbom["metadata"]["component"]["bom-ref"]
-        component_refs = [c["bom-ref"] for c in self.sbom["components"]]
+        component_refs = {c["bom-ref"] for c in self.sbom["components"]}
         
         self.sbom["dependencies"].insert(0, {
             "ref": root_ref,
-            "dependsOn": component_refs
+            "dependsOn": list(component_refs)
         })
     
     def _save_sbom(self):

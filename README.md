@@ -6,7 +6,7 @@ Se puede utilizar para extraer librerías de aplicaciones en entornos linux para
 
 ## Requerimientos
 
-Para utilizar los siguientes scripts de forma correcta, se necesitan los siguientes ficheros de datos y establecer las variables de entorno, únicamente si es necesario el mapeo de librerías a paquetes, muy importante para el procesamiento de archivos XML extraidos con `ldd_recursive.sh`.
+Para utilizar los siguientes scripts de forma correcta, se necesitan los siguientes ficheros de datos y establecer las variables de entorno, únicamente si es necesario el mapeo de librerías a paquetes, muy importante para el procesamiento de archivos XML extraidos con el script de bash `ldd_recursive.sh`.
 
 - Fichero donde se especifiquen el contenido de librerías de cada paquete en formato JSON ([Ver ejemplo de esquema aqui](#inventario-de-paqueteslibrerías-en-json)).
 

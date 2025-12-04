@@ -312,7 +312,7 @@ class YAMLExporter(BaseExporter):
             if not pkgdir_id or pkgdir_id == 'unknown':
                 return
             
-            match = re.match(r'^(.*?)-([0-9].*)$', pkgdir_id)
+            match = re.match(r'^(.+?)-(\d+[\.:].*?)$', pkgdir_id)
 
             if match:
                 pkg_name, pkg_vrs = match.groups()
@@ -380,22 +380,25 @@ class YAMLExporter(BaseExporter):
         """
         for key, data in self._get_sorted_components():
             
-            # Obtain package name
-            pkg_id = data.get('pkg_id', '')
-            if not pkg_id or pkg_id == 'unknown':
-                pkgdir_id = data.get('pkgdir_id', '')
-                if not pkgdir_id or pkgdir_id == 'unknown':
-                    continue
+            if data.get("type", "") == "library":
+                # Obtain package name
+                pkg_id = data.get('pkg_id', '')
+                if not pkg_id or pkg_id == 'unknown':
+                    pkgdir_id = data.get('pkgdir_id', '')
+                    if not pkgdir_id or pkgdir_id == 'unknown':
+                        continue
 
-                match = re.match(r'^(.*?)-([0-9].*)$', pkgdir_id)
-                
-                if match:
-                    pkg_name, pkg_vrs = match.groups()
+                    match = re.match(r'^(.+?)-(\d+[\.:].*?)$', pkgdir_id)
+                    
+                    if match:
+                        pkg_name, pkg_vrs = match.groups()
+                    else:
+                        pkg_name, pkg_vrs = pkgdir_id, 'unknown'
+
                 else:
-                    pkg_name, pkg_vrs = pkgdir_id, 'unknown'
-
+                    pkg_name = pkg_id
             else:
-                pkg_name = pkg_id
+                pkg_name = data.get('name', '')           
             
             if pkg_name not in yaml_data['packages']:
                 continue
@@ -405,18 +408,23 @@ class YAMLExporter(BaseExporter):
             for lib_dep in data.get('dependencies', []):
                 for key_deps, data_deps in self._get_sorted_components():
                     if lib_dep == key_deps:
-                        dep_pkg_id = data_deps.get('pkg_id', '')
-                        if not dep_pkg_id or dep_pkg_id == 'unknown':
-                            pkg_dep_dir = data_deps.get('pkgdir_id', '')
-                            match = re.match(r'^(.*?)-([0-9].*)$', pkg_dep_dir)
-                            if match:
-                                pkg_dep_name, _ = match.groups()
+
+                        if data_deps.get("type", "") == "library":
+                            dep_pkg_id = data_deps.get('pkg_id', '')
+                            if not dep_pkg_id or dep_pkg_id == 'unknown':
+                                pkg_dep_dir = data_deps.get('pkgdir_id', '')
+                                match = re.match(r'^(.*?)-([0-9].*)$', pkg_dep_dir)
+                                if match:
+                                    pkg_dep_name, _ = match.groups()
+                                else:
+                                    pkg_dep_name= pkg_dep_dir
                             else:
-                                pkg_dep_name= pkg_dep_dir
+                                pkg_dep_name = dep_pkg_id
+
                         else:
-                            pkg_dep_name = dep_pkg_id
-                        
-                        if pkg_dep_name and pkg_dep_name != 'unknown':
+                            pkg_dep_name = data_deps.get("name", "")
+
+                        if pkg_dep_name and pkg_dep_name != 'unknown' and pkg_dep_name != pkg_name:
                             pkg_deps.add(pkg_dep_name)
                         break
             
