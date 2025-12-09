@@ -72,7 +72,7 @@ Estos hacen referencia  primeramente al directorio donde se ubican las listas co
 export LIBS_DIR="/"
 ```
 
-Y también el report completo del firmware o BSP extraído del sistema (linux) donde se ejecutará la aplicación.
+Y también el report completo del firmware o BSP extraído del sistema (linux) donde se ejecutará la aplicación, en el caso de que sea posible y se tenga acceso al fichero.
 
 ```bash
 export PTX_REPORT="/"

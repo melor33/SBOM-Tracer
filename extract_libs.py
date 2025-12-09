@@ -306,6 +306,10 @@ class YAMLExporter(BaseExporter):
         """
         pkg_id = dep_data.get('pkg_id', '')
         pkg_src = dep_data.get('pkg_src', '')
+        pkg_md5 = dep_data.get('pkg_md5', '')
+        pkg_sha1 = dep_data.get('pkg_sha1', '')
+        pkg_sha256 = dep_data.get('pkg_sha256', '')
+        pkg_sha512 = dep_data.get('pkg_sha512', '')
         
         if not pkg_id or pkg_id == 'unknown':
             pkgdir_id = dep_data.get('pkgdir_id', '')
@@ -324,6 +328,10 @@ class YAMLExporter(BaseExporter):
                     "name": pkg_name,
                     "version": pkg_vrs,
                     "source": pkg_src,
+                    "md5": pkg_md5,
+                    "sha1": pkg_sha1,
+                    "sha256": pkg_sha256,
+                    "sha512": pkg_sha512,
                     "deps": []
                 }
 
@@ -581,6 +589,10 @@ class Component:
     pkg_id: str = 'unknown'
     pkg_src: str = 'unknown'
     level: str = 'unknown'
+    md5: str = ''
+    sha1: str = ''
+    sha256: str = ''
+    sha512: str = ''
     dependencies: Set[str] = field(default_factory=set)
     
     def to_dict(self) -> Dict[str, Any]:
@@ -594,6 +606,10 @@ class Component:
             'pkgdir_id': self.pkgdir_id,
             'pkg_id': self.pkg_id,
             'pkg_src': self.pkg_src,
+            'pkg_md5': self.md5,
+            'pkg_sha1': self.sha1,
+            'pkg_sha256': self.sha256,
+            'pkg_sha512': self.sha512,
             'arch': self.arch,
             'dependencies': self.dependencies
         }
@@ -633,6 +649,10 @@ class DPKGComponentParser:
 
             block_name = 'unknown'
             block_source = ''
+            block_md5 = ''
+            block_sha1 = ''
+            block_sha256 = ''
+            block_sha512 = ''
             block_type = 'unknown'
             block_mantainer = 'unknown'
             block_version = 'unknown'
@@ -662,6 +682,18 @@ class DPKGComponentParser:
                     else:
                         block_type = "package"
 
+                if key == "MD5sum":
+                    block_md5 = val.strip()
+
+                if key == "SHA1":
+                    block_sha1 = val.strip()
+
+                if key == "SHA256":
+                    block_sha256 = val.strip()
+
+                if key == "SHA512":
+                    block_sha512 = val.strip()
+
                 elif key == "Maintainer":
                     block_mantainer  = val.strip()
 
@@ -686,6 +718,10 @@ class DPKGComponentParser:
                     version=block_version if block_version else 'unknown',
                     comp_lvl='dep',
                     source='deb',
+                    md5='',
+                    sha1='',
+                    sha256='',
+                    sha512='',
                     comp_type=block_type if block_type else 'unknown',
                     filename=None
                 )
@@ -708,6 +744,10 @@ class DPKGComponentParser:
                 version=block_version if block_version else 'unknown',
                 comp_lvl='dep',
                 source='deb',
+                md5=block_md5 if block_md5 else '',
+                sha1=block_sha1 if block_sha1 else '',
+                sha256=block_sha256 if block_sha256 else '',
+                sha512=block_sha512 if block_sha512 else '',
                 comp_type=block_type if block_type else 'unknown',
                 filename=None
             )
@@ -746,14 +786,14 @@ class DPKGComponentParser:
                     found = False
                     # print(f"Alternative: {alt}")
 
-                    # Sources provide
-                    for sprov_key, sprov_vallist in sources_provides_dict.items():
-                        # print(f"Source Provides list: {sprov_vallist}")
-                        if alt in sprov_vallist and comp_key != sprov_key:
-                            # print(f"Sources Provides Key: {sprov_key}")
-                            self.components[comp_key]['dependencies'].add(sprov_key)
-                            found = True
-                            break
+                    # # Sources provide (introduces source package instead of original package)
+                    # for sprov_key, sprov_vallist in sources_provides_dict.items():
+                    #     # print(f"Source Provides list: {sprov_vallist}")
+                    #     if alt in sprov_vallist and comp_key != sprov_key:
+                    #         # print(f"Sources Provides Key: {sprov_key}")
+                    #         self.components[comp_key]['dependencies'].add(sprov_key)
+                    #         found = True
+                    #         break
 
                     if found:
                         break
@@ -779,6 +819,10 @@ class DPKGComponentParser:
             version=dpkg_vers if dpkg_vers else 'unknown',
             comp_lvl='root',
             comp_type='firmware',
+            md5='',
+            sha1='',
+            sha256='',
+            sha512='',
             source='generic',
             filename=None
         )
@@ -800,6 +844,10 @@ class DPKGComponentParser:
                          comp_type: str, 
                          comp_lvl: str,
                          source: str,
+                         md5: Optional[str],
+                         sha1: Optional[str],
+                         sha256: Optional[str],
+                         sha512: Optional[str],
                          filename: Optional[str]) -> Component:
         """
         Crea un objeto Component con mapeos aplicados.
@@ -826,6 +874,10 @@ class DPKGComponentParser:
             filename=comp_filename,
             pkg_src=source,
             pkg_id=pkg_id, # if pkg_id and pkg_id != 'unknown' else name,
+            md5=md5 if md5 else '',
+            sha1=sha1 if sha1 else '',
+            sha256=sha256 if sha256 else '',
+            sha512=sha512 if sha512 else '',
             pkgdir_id=pkgdir_id if pkgdir_id and pkgdir_id != 'unknown' else f"{name}-{version}"
         )
     
