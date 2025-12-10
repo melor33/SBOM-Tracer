@@ -33,6 +33,42 @@ DEFAULT_PTX_REPORT = os.environ.get("PTX_REPORT") or ''
 
 DEFAULT_THRESHOLD = 80.0
 
+VERSION = '0.0.0'
+
+def print_banner():
+    """Imprime el banner del programa"""
+    banner = f"""
+╔══════════════════════════════════════════════════════════════════════════╗
+║              Extraer paquetes desde listado de librerías (XML)           ║
+║                              Versión {VERSION}                               ║
+╚══════════════════════════════════════════════════════════════════════════╝
+"""
+    print(banner)
+
+def print_examples():
+    """Imprime ejemplos de uso del programa"""
+    examples = '''
+    USE EXAMPLES:
+    ═══════════════════════════════════════════════════════════════
+    # Procesamiento de archivos XML (generados por ./ldd_recursive.sh)
+    %(prog)s xml file.xml                                    # Análisis básico en terminal
+    %(prog)s xml file.xml -j output.json                     # Exportar solo JSON
+    %(prog)s xml file.xml -t report.txt                      # Exportar solo reporte texto
+    %(prog)s xml file.xml -y deps.yaml                       # Exportar solo YAML
+    %(prog)s xml file.xml -j deps.json -t deps.txt           # Exportar múltiples formatos
+    %(prog)s xml file.xml --no-console                       # Sin salida en terminal
+    %(prog)s xml file.xml -s                                 # Solo resumen
+    %(prog)s xml file.xml -m                                 # Crear mapeo lib->pkg
+    %(prog)s xml file.xml --lib-lists /path/to/dir           # Usar directorios con mapeos
+    %(prog)s xml file.xml --bsp-report base_report.yaml      # Usar reporte BSP del sistema base
+    
+    # Procesamiento de archivos DPKG
+    %(prog)s dpkg dpkg_status --dpkg-name "Sistema" --dpkg-vers "1.0"  # Análisis DPKG
+    %(prog)s dpkg dpkg_status -j output.json                           # Exportar a JSON
+    %(prog)s dpkg dpkg_status -y deps.yaml                             # Exportar a YAML
+        '''
+    print(examples)
+
 # ============================================================================
 # MAPPING SYSTEM
 # ============================================================================
@@ -1196,25 +1232,7 @@ def main():
     parser = argparse.ArgumentParser(
         description='Analizador de dependencias desde archivos',
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog='''
-    Ejemplos de uso:
-    # Procesamiento de archivos XML (generados por ./ldd_recursive.sh)
-    %(prog)s xml file.xml                                    # Análisis básico en terminal
-    %(prog)s xml file.xml -j output.json                     # Exportar solo JSON
-    %(prog)s xml file.xml -t report.txt                      # Exportar solo reporte texto
-    %(prog)s xml file.xml -y deps.yaml                       # Exportar solo YAML
-    %(prog)s xml file.xml -j deps.json -t deps.txt           # Exportar múltiples formatos
-    %(prog)s xml file.xml --no-console                       # Sin salida en terminal
-    %(prog)s xml file.xml -s                                 # Solo resumen
-    %(prog)s xml file.xml -m                                 # Crear mapeo lib->pkg
-    %(prog)s xml file.xml --lib-lists /path/to/dir           # Usar directorios con mapeos
-    %(prog)s xml file.xml --bsp-report base_report.yaml      # Usar reporte BSP del sistema base
-    
-    # Procesamiento de archivos DPKG
-    %(prog)s dpkg dpkg_status --dpkg-name "Sistema" --dpkg-vers "1.0"  # Análisis DPKG
-    %(prog)s dpkg dpkg_status -j output.json                           # Exportar a JSON
-    %(prog)s dpkg dpkg_status -y deps.yaml                             # Exportar a YAML
-        '''
+        epilog='Para ver ejemplos de uso: python3 %(prog)s --examples'
     )
 
     parser.add_argument('--no-console', 
@@ -1224,6 +1242,10 @@ def main():
     parser.add_argument('-s', '--summary-only', 
                         action='store_true',
                         help='Mostrar solo resumen (sin dependencias detalladas)')
+    
+    parser.add_argument('--examples', 
+                        action='store_true',
+                        help='Muestra ejemplos de uso del programa')
 
     parser.add_argument('-v', '--version', 
                         action='version',
@@ -1304,7 +1326,16 @@ def main():
                         metavar='FILE',
                         help='Exportar resultados finales a archivo YAML')
 
+    if len(sys.argv) == 1:
+        print_banner()
+        parser.print_help()
+        return 0
+
     args = parser.parse_args()
+
+    if args.examples:
+        print_examples()
+        return 0
     
     input_path = Path(args.input_file)
     if not input_path.exists():

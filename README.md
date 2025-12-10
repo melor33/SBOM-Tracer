@@ -8,6 +8,8 @@ Se puede utilizar para extraer librerías de aplicaciones en entornos linux para
 
 Para utilizar los siguientes scripts de forma correcta, se necesitan los siguientes ficheros de datos y establecer las variables de entorno, únicamente si es necesario el mapeo de librerías a paquetes, muy importante para el procesamiento de archivos XML extraidos con el script de bash `ldd_recursive.sh`.
 
+- Para el script ([so_scanner.py](#so_scannerpy-crear-listado-de-paquetes-y-librerías-dinámicas-pkg-lib_nameso)) es necesario que el sistema contenga el gestor de paquetes DPKG, esto es, que el sistema esté basado en Debian.
+
 - Fichero donde se especifiquen el contenido de librerías de cada paquete en formato JSON ([Ver ejemplo de esquema aqui](#inventario-de-paqueteslibrerías-en-json)).
 
 - Archivo del report completo del BSP o firware en la que se evaluarán las aplicaciones, en formato YAML y esquema utilizado por PTXDist.
@@ -60,9 +62,108 @@ Todas las dependencias necesarias están listadas en `requirements.txt`.
 pip install -r requirements.txt
 ```
 
-## Extraer paquetes desde listado de librerías (XML)
+## Crear listado de paquetes y librerías dinámicas (pkg: <lib_name\>.so) (so_scanner.py)
 
-### Configuración del script
+### Configuración
+
+El script no necesita configuracion alguna, pero es necesario que el sistema en el que se desee ejecutar el script contenga un gestor de paquetes, preferiblemente siendo DPKG. Esto se debe a que el script verifica si el sistema contiene DPKG.
+
+### Uso 
+
+Al ejecutar el script este busca en el sistema todas las librerías dinamicas que pueda encontrar, en los directorios proporcionados. Después itera por esa lista para buscar a que paquete pertenecen cada uno de los .so encontrados. Todo ello lo guarda y devuelve un listado de paquetes con todas las librerías que contiene cada una en formato JSON con el siguiente ([esquema](#inventario-de-paqueteslibrerías-en-json))
+
+El script se puede ejecutar de la siguiente manera:
+```bash
+python3 so_scanner.py -v -w 64 --pretty -o libraries.json
+```
+
+Se puede obtener toda la información para la ejecución del script mediante:
+
+```bash
+python3 so_scanner.py -h
+```
+
+```bash
+
+╔═══════════════════════════════════════════════════════════════╗
+║              Escáner de Librerías .so del Sistema             ║
+║                        Versión 1.0.0                          ║
+╚═══════════════════════════════════════════════════════════════╝
+
+usage: so_scanner.py [-h] [-o ARCHIVO] [-v] [-vV] [--pretty] [-w N] [--examples] [--version]
+
+Escáner de librerías .so del sistema - Mapea librerías compartidas a paquetes
+
+options:
+  -h, --help            show this help message and exit
+  -o ARCHIVO, --output ARCHIVO
+                        Nombre base para archivos de salida JSON. Se generarán 3 archivos: installed_<ARCHIVO>, suggested_<ARCHIVO>, unknown_<ARCHIVO> (por defecto: salida a stdout)
+  -v, --verbose         Modo verbose - Muestra información de progreso y estadísticas
+  -vV, --ultra-verbose  Modo ultra-verbose - Muestra información detallada de depuración para cada archivo procesado
+  --pretty              Formatea el JSON con indentación para mejor legibilidad
+  -w N, --workers N     Número de workers (hilos) para procesamiento paralelo. Por defecto: CPU_COUNT × 4 (típicamente 32)
+  --examples            Muestra ejemplos de uso del programa
+  --version             show program's version number and exit
+
+Para ver ejemplos de uso detallados, ejecuta: so_scanner.py --examples
+
+EJEMPLOS DE USO:
+═══════════════════════════════════════════════════════════════
+
+1. Escaneo básico con salida en pantalla:
+   $ ./so_scanner.py
+
+2. Escaneo con salida formateada a archivos JSON:
+   $ ./so_scanner.py -o libraries.json --pretty
+
+3. Escaneo con modo verbose para ver el progreso:
+   $ ./so_scanner.py -v -o libraries.json
+
+4. Escaneo con modo ultra-verbose (depuración detallada):
+   $ ./so_scanner.py -vV -o libraries.json
+
+5. Ajustar número de workers (hilos paralelos):
+   $ ./so_scanner.py -v -w 16 -o libraries.json
+
+6. Escaneo rápido con máximo paralelismo:
+   $ ./so_scanner.py -v -w 64 --pretty -o libraries.json
+
+7. Escaneo en modo debug con pocos workers:
+   $ ./so_scanner.py -vV -w 4 -o libraries.json
+
+8. Ver esta ayuda:
+   $ ./so_scanner.py --help
+   $ ./so_scanner.py --examples
+
+SALIDA:
+═══════════════════════════════════════════════════════════════
+El programa genera 3 archivos JSON (o 3 secciones en stdout):
+
+• installed_<nombre>.json  → Librerías de paquetes instalados
+• suggested_<nombre>.json  → Librerías de paquetes sugeridos
+• unknown_<nombre>.json    → Librerías sin paquete conocido
+
+FORMATO JSON:
+═══════════════════════════════════════════════════════════════
+{
+  "package": "libc6",
+  "libraries": [
+    "libc.so.6",
+    "libm.so.6"
+  ]
+}
+
+REQUISITOS:
+═══════════════════════════════════════════════════════════════
+• Sistema Debian/Ubuntu (requiere dpkg)
+• apt-file (instalado automáticamente si no está presente)
+
+```
+
+
+## Extraer paquetes desde listado de librerías (XML) (extract_libs.py)
+
+### Configuración
 
 Antes de ejecutar el script se deben establecer las variables de entorno que se utilizarán por defecto en el script. Esto es, se utilizarán como directorios default para el caso en el que no se introduzcan los argumento `--lib-lists` y `--bsp-report`
 
@@ -78,7 +179,7 @@ Y también el report completo del firmware o BSP extraído del sistema (linux) d
 export PTX_REPORT="/"
 ```
 
-### Uso del script
+### Uso
 
 El script lista todos los paquetes que existen entre todas las librerías en el fichero XML y lo procesa para tener la información mas accesible y legible. Además, también se puede obtener un archivo en formato YAML basado en los report creados por PTXDist para poder obtener el SBOM final. 
 
@@ -103,45 +204,53 @@ python3 extract_libs.py -h
 ```
 
 ```bash
-Uso:python3 extract_libs.py [-h] [--no-console] [-s] [-v] {xml,dpkg} ...
+╔══════════════════════════════════════════════════════════════════════════╗
+║              Extraer paquetes desde listado de librerías (XML)           ║
+║                              Versión 0.0.0                               ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+Uso:python3 extract_libs.py [-h] [--no-console] [-s] [--examples] [-v] {xml,dpkg} ...
 
 Analizador de dependencias desde archivos
 
-Argumentos posicionales:
+Argumentos Posicionales:
   {xml,dpkg}          Tipo de archivo a procesar
     xml               Procesar fichero XML (creado por ./ldd_recursive.sh)
     dpkg              Procesar datos extraídos desde dpkg/status
 
 Opciones:
-  -h, --help          Visualizar el mensaje de ayuda
+  -h, --help          show this help message and exit
   --no-console        No mostrar salida en consola
   -s, --summary-only  Mostrar solo resumen (sin dependencias detalladas)
-  -v, --version       Visualizar versión del programa
+  --examples          Muestra ejemplos de uso del programa
+  -v, --version       show program's version number and exit
 
-    Ejemplos de uso:
-    # Procesamiento de archivos XML (generados por ./ldd_recursive.sh)
-    extract_libs.py xml file.xml                                    # Análisis básico en terminal
-    extract_libs.py xml file.xml -j output.json                     # Exportar solo JSON
-    extract_libs.py xml file.xml -t report.txt                      # Exportar solo reporte texto
-    extract_libs.py xml file.xml -y deps.yaml                       # Exportar solo YAML
-    extract_libs.py xml file.xml -j deps.json -t deps.txt           # Exportar múltiples formatos
-    extract_libs.py xml file.xml --no-console                       # Sin salida en terminal
-    extract_libs.py xml file.xml -s                                 # Solo resumen
-    extract_libs.py xml file.xml -m                                 # Crear mapeo lib->pkg
-    extract_libs.py xml file.xml --lib-lists /path/to/dir           # Usar directorios con mapeos
-    extract_libs.py xml file.xml --bsp-report base_report.yaml      # Usar reporte BSP del sistema base
-    
-    # Procesamiento de archivos DPKG
-    extract_libs.py dpkg dpkg_status --dpkg-name "Sistema" --dpkg-vers "1.0"  # Análisis DPKG
-    extract_libs.py dpkg dpkg_status -t report.txt                      # Exportar a TXT
-    extract_libs.py dpkg dpkg_status -j output.json                           # Exportar a JSON
-    extract_libs.py dpkg dpkg_status -y deps.yaml                             # Exportar a YAML
+Para ver ejemplos de uso: python3 extract_libs.py --examples
+
+  USE EXAMPLES:
+  ═══════════════════════════════════════════════════════════════
+  # Procesamiento de archivos XML (generados por ./ldd_recursive.sh)
+  extract_libs.py xml file.xml                                    # Análisis básico en terminal
+  extract_libs.py xml file.xml -j output.json                     # Exportar solo JSON
+  extract_libs.py xml file.xml -t report.txt                      # Exportar solo reporte texto
+  extract_libs.py xml file.xml -y deps.yaml                       # Exportar solo YAML
+  extract_libs.py xml file.xml -j deps.json -t deps.txt           # Exportar múltiples formatos
+  extract_libs.py xml file.xml --no-console                       # Sin salida en terminal
+  extract_libs.py xml file.xml -s                                 # Solo resumen
+  extract_libs.py xml file.xml -m                                 # Crear mapeo lib->pkg
+  extract_libs.py xml file.xml --lib-lists /path/to/dir           # Usar directorios con mapeos
+  extract_libs.py xml file.xml --bsp-report base_report.yaml      # Usar reporte BSP del sistema base
+  
+  # Procesamiento de archivos DPKG
+  extract_libs.py dpkg dpkg_status --dpkg-name "Sistema" --dpkg-vers "1.0"  # Análisis DPKG
+  extract_libs.py dpkg dpkg_status -j output.json                           # Exportar a JSON
+  extract_libs.py dpkg dpkg_status -y deps.yaml                             # Exportar a YAML
 
 ```
 
-## Convertir report (YAML) a CycloneDX SBOM
+## Convertir report (YAML) a CycloneDX SBOM (cyclonedx_converter.py)
 
-### Configuración del script
+### Configuración
 
 El script requiere de la configuración para el acceso a la base de datos de NVD(NIST) donde se alojan los datos de todos los CVE y CPE del gobierno de los Estados Unidos.
 
@@ -155,7 +264,7 @@ export API_KEY="tu_api_key"
 export TARGET_URL="https://services.nvd.nist.gov/rest/json/cpes/2.0"
 ```
 
-### Uso del script
+### Uso
 
 El script convierte ficheros de reporte de PTXDist originales o customizados (creados con [extract_libs.py](#extraer-paquetes-desde-listado-de-librerías-xml)) en formato YAML a ficheros de listado de materiales de software (SBOM) en formato CycloneDX JSON.
 
@@ -174,15 +283,21 @@ python3 cyclonedx_converter.py -h
 ```
 
 ```bash
-Usage: cyclonedx_converter.py [-h] -t {ptx,firmware,prg,hmi,application,other} -o OUTPUT [-n NAME] [-v] [-q] [-s] yaml_file
+╔══════════════════════════════════════════════════════════════════════════╗
+║                  Convertir report (YAML) a CycloneDX SBOM                ║
+║                              Versión 0.0.0                               ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+Usage: python3 cyclonedx_converter.py [-h] [--examples] -t {ptx,firmware,prg,hmi,application,other} -o OUTPUT [-n NAME] [-v] [-q] [-s] yaml_file
 
 Convert YAML reports (PTXdist/Custom) to CycloneDX SBOM
 
-Positional arguments:
+Positional Arguments:
   yaml_file             Input YAML report file
 
 Options:
   -h, --help            show this help message and exit
+  --examples            Muestra ejemplos de uso del programa
   -t {ptx,firmware,prg,hmi,application,other}, --type {ptx,firmware,prg,hmi,application,other}
                         Type of YAML file to convert
   -o OUTPUT, --output OUTPUT
@@ -192,7 +307,10 @@ Options:
   -q, --quiet           Suppress informational messages
   -s, --sign            Sign created SBOM file.
 
-Examples:
+Para ver ejemplos de uso: python3 cyclonedx_converter.py --examples
+
+  USE EXAMPLES:
+  ═══════════════════════════════════════════════════════════════
   # Convert PTXdist report
   cyclonedx_converter.py -t ptx full-bsp-report.yaml -o bsp-sbom.json
   
@@ -202,7 +320,8 @@ Examples:
   # Convert HMI report
   cyclonedx_converter.py -t hmi hmi-report.yaml -o hmi-sbom.json
 
-Supported types:
+  SUPPORTED TYPES:
+  ═══════════════════════════════════════════════════════════════
   ptx         PTXdist BSP projects
   prg         Program/application projects
   hmi         HMI (Human-Machine Interface) projects
@@ -230,7 +349,7 @@ SBOM_CREATION/
 └─ setup.sh
 ```
 
-## Uso de Library Finder
+## Dynamic Library Finder (ldd_recursive.sh)
 
 Para utilizar el siguiente script, solamente se necesita copiar el script de BASH al sistema en el que este se debe de funcionar y ejecutarlo mediante terminal.
 

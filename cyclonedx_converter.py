@@ -54,6 +54,43 @@ FULL_VERSION_PATTERN = re.compile(
     re.VERBOSE | re.IGNORECASE
 )
 
+VERSION = '0.0.0'
+
+def print_banner():
+    """Imprime el banner del programa"""
+    banner = f"""
+╔══════════════════════════════════════════════════════════════════════════╗
+║                  Convertir report (YAML) a CycloneDX SBOM                ║
+║                              Versión {VERSION}                               ║
+╚══════════════════════════════════════════════════════════════════════════╝
+"""
+    print(banner)
+
+def print_examples():
+    """Imprime ejemplos de uso del programa"""
+    examples = """
+  USE EXAMPLES:
+  ═══════════════════════════════════════════════════════════════
+  # Convert PTXdist report
+  %(prog)s -t ptx full-bsp-report.yaml -o bsp-sbom.json
+  
+  # Convert application report with custom name
+  %(prog)s -t prg app-report.yaml -o app-sbom.json -n "MyApp-v1.0"
+  
+  # Convert HMI report
+  %(prog)s -t hmi hmi-report.yaml -o hmi-sbom.json
+
+  SUPPORTED TYPES:
+  ═══════════════════════════════════════════════════════════════
+  ptx         PTXdist BSP projects
+  prg         Program/application projects
+  hmi         HMI (Human-Machine Interface) projects
+  application Generic application projects
+  firmware    Firmware projects
+  other       Other custom projects
+            """
+    print(examples)
+
 class YAMLParser(object):
     """Simple YAML parser compatible with Python 2.7+"""
     
@@ -1275,30 +1312,18 @@ class CLIApplication(object):
         parser = argparse.ArgumentParser(
             description='Convert YAML reports (PTXdist/Custom) to CycloneDX SBOM',
             formatter_class=argparse.RawDescriptionHelpFormatter,
-            epilog="""
-Examples:
-  # Convert PTXdist report
-  %(prog)s -t ptx full-bsp-report.yaml -o bsp-sbom.json
-  
-  # Convert application report with custom name
-  %(prog)s -t prg app-report.yaml -o app-sbom.json -n "MyApp-v1.0"
-  
-  # Convert HMI report
-  %(prog)s -t hmi hmi-report.yaml -o hmi-sbom.json
-
-Supported types:
-  ptx         PTXdist BSP projects
-  prg         Program/application projects
-  hmi         HMI (Human-Machine Interface) projects
-  application Generic application projects
-  firmware    Firmware projects
-  other       Other custom projects
-            """
+            epilog='Para ver ejemplos de uso: python3 %(prog)s --examples'
         )
         
         parser.add_argument(
             'yaml_file',
             help='Input YAML report file'
+        )
+
+        parser.add_argument(
+            '--examples',
+            action='store_true',
+            help='Muestra ejemplos de uso del programa'
         )
         
         parser.add_argument(
@@ -1338,7 +1363,16 @@ Supported types:
             help='Sign created SBOM file.'
         )
         
+        if len(sys.argv) == 1:
+            print_banner()
+            parser.print_help()
+            sys.exit(0)
+
         self.args = parser.parse_args()
+
+        if self.args.examples:
+            print_examples()
+            sys.exit(0)
     
     def _validate_input(self):
         """Validate input parameters"""
