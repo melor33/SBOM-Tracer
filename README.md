@@ -1,18 +1,12 @@
 # SBOM Tracer
 
-Proyecto compuesto por múltiples scripts para crear listados de software SBOM con formato CycloneDX JSON.
+Este proyecto reúne varios scripts diseñados para recopilar la mayor cantidad de información posible con el fin de generar listados SBOM en formato CycloneDX JSON.
 
-Se puede utilizar para extraer librerías de aplicaciones en entornos linux para listar todos los paquetes que conforman la aplicación con un listado SBOM en formato CycloneDX JSON. O en su defecto para convertir reportes en formato YAML a listados SBOM en formato CycloneDX JSON.
+Permite obtener todas las bibliotecas dinámicas presentes en un sistema y asociarlas con sus paquetes fuente correspondientes. También puede extraer todos los paquetes y dependencias de una instalación Linux y exportarlos en diferentes formatos legibles: informes utilizando el [esquema de PTXDist](#esquema-report-ptxdist-formato-yaml) en YAML, listados de componentes en JSON y resúmenes en TXT. Además, es capaz de generar los archivos SBOM finales en formato CycloneDX JSON.
 
-## Requerimientos
-
-Para utilizar los siguientes scripts de forma correcta, se necesitan los siguientes ficheros de datos y establecer las variables de entorno, únicamente si es necesario el mapeo de librerías a paquetes, muy importante para el procesamiento de archivos XML extraidos con el script de bash `ldd_recursive.sh`.
-
-- Para el script ([so_scanner.py](#so_scannerpy-crear-listado-de-paquetes-y-librerías-dinámicas-pkg-lib_nameso)) es necesario que el sistema contenga el gestor de paquetes DPKG, esto es, que el sistema esté basado en Debian.
-
-- Fichero donde se especifiquen el contenido de librerías de cada paquete en formato JSON ([Ver ejemplo de esquema aqui](#inventario-de-paqueteslibrerías-en-json)).
-
-- Archivo del report completo del BSP o firware en la que se evaluarán las aplicaciones, en formato YAML y esquema utilizado por PTXDist.
+<p align="center">
+  <img src="images/SBOM-Tracer-workflow.JPG" alt="Initial stage workflow" width=1300>
+</p>
 
 ## Instalación
 
@@ -64,6 +58,10 @@ pip install -r requirements.txt
 
 ## Crear listado de paquetes y librerías dinámicas (pkg: <lib_name\>.so) (so_scanner.py)
 
+### Requisitos
+
+Para el script ([`so_scanner.py`](#so_scannerpy-crear-listado-de-paquetes-y-librerías-dinámicas-pkg-lib_nameso)) es necesario que el sistema contenga el gestor de paquetes DPKG, esto es, que el sistema esté basado en Debian.
+
 ### Configuración
 
 El script no necesita configuracion alguna, pero es necesario que el sistema en el que se desee ejecutar el script contenga un gestor de paquetes, preferiblemente siendo DPKG. Esto se debe a que el script verifica si el sistema contiene DPKG.
@@ -71,6 +69,10 @@ El script no necesita configuracion alguna, pero es necesario que el sistema en 
 ### Uso 
 
 Al ejecutar el script este busca en el sistema todas las librerías dinamicas que pueda encontrar, en los directorios proporcionados. Después itera por esa lista para buscar a que paquete pertenecen cada uno de los .so encontrados. Todo ello lo guarda y devuelve un listado de paquetes con todas las librerías que contiene cada una en formato JSON con el siguiente ([esquema](#inventario-de-paqueteslibrerías-en-json))
+
+<p align="center">
+  <img src="images/SBOM-Tracer-initialStage.JPG" alt="Initial stage workflow" width=500>
+</p>
 
 El script se puede ejecutar de la siguiente manera:
 ```bash
@@ -163,6 +165,14 @@ REQUISITOS:
 
 ## Extraer paquetes desde listado de librerías (XML) (extract_libs.py)
 
+### Requisitos
+
+El script `extract_libs.py` precisa de los siguientes ficheros de datos y establecer las variables de entorno definidas en el apartado de configuración, esto es importante si se requiere el mapeo de librerías a paquetes, de vital importancia para el procesamiento de archivos XML extraidos con el script de bash `ldd_recursive.sh`, ya que sin esto solamente aparecerá la informacion de librerías dinamicas.
+
+- Fichero donde se especifiquen el contenido de librerías de cada paquete en formato JSON ([Ver ejemplo de esquema aqui](#inventario-de-paqueteslibrerías-en-json)).
+
+- Archivo del report completo del BSP o firware en la que se evaluarán las aplicaciones, en formato YAML y [esquema utilizado por PTXDist](#esquema-report-ptxdist-formato-yaml).
+
 ### Configuración
 
 Antes de ejecutar el script se deben establecer las variables de entorno que se utilizarán por defecto en el script. Esto es, se utilizarán como directorios default para el caso en el que no se introduzcan los argumento `--lib-lists` y `--bsp-report`
@@ -181,7 +191,11 @@ export PTX_REPORT="/"
 
 ### Uso
 
-El script lista todos los paquetes que existen entre todas las librerías en el fichero XML y lo procesa para tener la información mas accesible y legible. Además, también se puede obtener un archivo en formato YAML basado en los report creados por PTXDist para poder obtener el SBOM final. 
+El script lista todos los paquetes que existen entre todas las librerías en el fichero XML y lo procesa para tener la información mas accesible y legible. Además, también se puede obtener un archivo en formato YAML basado en los report creados con el [esquema de PTXDist](#esquema-report-ptxdist-formato-yaml) para poder obtener el SBOM final. 
+
+<p align="center">
+  <img src="images/SBOM-Tracer-secondStage.JPG" alt="Second stage workflow" width=700>
+</p>
 
 El script requiere de diversos argumentos para su ejecución.
 
@@ -250,6 +264,10 @@ Para ver ejemplos de uso: python3 extract_libs.py --examples
 
 ## Convertir report (YAML) a CycloneDX SBOM (cyclonedx_converter.py)
 
+### Requisitos
+
+Para utilizar el script de `cyclonedx_converter.py` se necesita tener conexión a la URL de la base de datos de NVD de NIST y a ser posible también una API_KEY para hacer las peticiones a un mayor rate limit. Además también se necesita un fichero de datos con [estructura de PTXDist report](#esquema-report-ptxdist-formato-yaml) en formato YAML para poder procesarlo.
+
 ### Configuración
 
 El script requiere de la configuración para el acceso a la base de datos de NVD(NIST) donde se alojan los datos de todos los CVE y CPE del gobierno de los Estados Unidos.
@@ -258,7 +276,6 @@ Esto se debe de hacer mendiante las variables de entorno, configurando el endpoi
 
 La API key sirve para tener un rate limit ampliado, el cuál está limitado por las reglas de firewall de NIST. Con una API key se obtiene una rate limit de 50 requests por 30 segundos frente a los 5 requests por 30 segundos (sin API key). Se puede obtener en la siguiente url [Request an API Key](https://nvd.nist.gov/developers/request-an-api-key).
 
-
 ```bash
 export API_KEY="tu_api_key"
 export TARGET_URL="https://services.nvd.nist.gov/rest/json/cpes/2.0"
@@ -266,7 +283,11 @@ export TARGET_URL="https://services.nvd.nist.gov/rest/json/cpes/2.0"
 
 ### Uso
 
-El script convierte ficheros de reporte de PTXDist originales o customizados (creados con [extract_libs.py](#extraer-paquetes-desde-listado-de-librerías-xml)) en formato YAML a ficheros de listado de materiales de software (SBOM) en formato CycloneDX JSON.
+El script convierte ficheros con el [esquema reporte de PTXDist](#esquema-report-ptxdist-formato-yaml) originales o customizados (creados con [extract_libs.py](#extraer-paquetes-desde-listado-de-librerías-xml)) en formato YAML a ficheros de listado de materiales de software (SBOM) en formato CycloneDX JSON.
+
+<p align="center">
+  <img src="images/SBOM-Tracer-thirdStage.JPG" alt="Third stage workflow" width="600">
+</p>
 
 El script requiere de diversos argumentos para su ejecución.
 
@@ -475,3 +496,46 @@ Se puede ver el esquema completo en [`libs_schema.xsd`](./config/libs_schema.xsd
 ### Esquema CyclondeDX@1.5 formato JSON
 
 El esquema completo utilizado se puede ver en [`bom-1.5.schema.json`](https://github.com/CycloneDX/specification/blob/master/schema/bom-1.5.schema.json)
+
+### Esquema report PTXDist formato YAML
+
+```yaml
+ptxdist:
+  version: <string>
+  path: <path>
+
+packages:
+  <pkgname>:
+    # metadatos del paquete
+    name: <pkgname>
+    rulefile: <path>
+    menufile: <path>
+    version: <string>
+    srchash: <md5>
+    cfghash: <md5>
+    licenses: <string>
+    license-section: <enum>
+    builddeps: [<pkgname>, ...]
+    rundeps: [<pkgname>, ...]
+    url: [<url>, ...]
+    source: <path>
+    sources: [<path>, ...]
+    md5: <md5|md5s>
+    md5s: [<md5s>, ...]
+    git-commit: <hash>
+    patches: <path>
+    series: <path>
+    srcdir: <path>
+    builddir: <path>
+    pkgdir: <path>
+    devpkg: <path>
+    use-devpkg: <path>
+    spdx-sbom: <path>
+    cyclonedx-sbom: <path>
+    license-files: <obj|array>
+    files: [<path>, ...]
+    ipkgs: [<path>, ...]
+    pkgs: [<pkgname>, ...]
+    cve-product: [<string>, ...]
+    cve-version: <string>
+```
