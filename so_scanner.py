@@ -443,9 +443,11 @@ def main():
 
     for category in result.keys():
         if category != 'unknown':
-            json_output = json.dumps(sorted(result[category], key=lambda x: x['package']), indent=indent, ensure_ascii=False)
+            sorted_data = sorted(result[category], key=lambda x: x['package'])
+            json_output = json.dumps(sorted_data, indent=indent, ensure_ascii=False)
         else:
-            json_output = json.dumps(sorted(result[category]), indent=indent, ensure_ascii=False)
+            sorted_data = sorted(result[category])
+            json_output = json.dumps(sorted_data, indent=indent, ensure_ascii=False)
     
         # Guardar o imprimir
         if args.output:
