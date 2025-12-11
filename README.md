@@ -354,7 +354,7 @@ Para ver ejemplos de uso: python3 cyclonedx_converter.py --examples
 
 ## Estructura del Proyecto
 
-```
+```text
 SBOM_CREATION/
 │
 ├─ config/
@@ -432,7 +432,7 @@ Esquema del listado de librerías que contiene cada paquete en formato JSON.
 }
 ```
 
-Se puede ver el esquema completo en [`complist_schema.json`](./config/complist_schema.json)
+El esquema completo utilizado se puede ver en [`complist_schema.json`](./config/complist_schema.json)
 
 ### Lista de dependencias (librerías) en XML
 
@@ -491,7 +491,7 @@ Ejemplo:
 </component>
 ```
 
-Se puede ver el esquema completo en [`libs_schema.xsd`](./config/libs_schema.xsd)
+El esquema completo utilizado se puede ver en [`libs_schema.xsd`](./config/libs_schema.xsd)
 
 ### Esquema CyclondeDX@1.5 formato JSON
 
@@ -539,3 +539,5 @@ packages:
     cve-product: [<string>, ...]
     cve-version: <string>
 ```
+
+El esquema completo utilizado se puede ver en [`bsp-report.schema.yaml`](config/schema/bsp-report-schema.yaml)
