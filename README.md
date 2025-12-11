@@ -5,7 +5,7 @@ Este proyecto reúne varios scripts diseñados para recopilar la mayor cantidad 
 Permite obtener todas las bibliotecas dinámicas presentes en un sistema y asociarlas con sus paquetes fuente correspondientes. También puede extraer todos los paquetes y dependencias de una instalación Linux y exportarlos en diferentes formatos legibles: informes utilizando el [esquema de PTXDist](#esquema-report-ptxdist-formato-yaml) en YAML, listados de componentes en JSON y resúmenes en TXT. Además, es capaz de generar los archivos SBOM finales en formato CycloneDX JSON.
 
 <p align="center">
-  <img src="images/SBOM-Tracer-workflow.JPG" alt="Initial stage workflow" width=1300>
+  <img src="images/SBOM-Tracer-workflow.JPG" alt="Initial stage workflow">
 </p>
 
 ## Instalación
