@@ -89,7 +89,7 @@ def print_examples():
   firmware    Firmware projects
   other       Other custom projects
             """
-    print(examples)
+    return examples
 
 class YAMLParser(object):
     """Simple YAML parser compatible with Python 2.7+"""
@@ -1312,18 +1312,12 @@ class CLIApplication(object):
         parser = argparse.ArgumentParser(
             description='Convert YAML reports (PTXdist/Custom) to CycloneDX SBOM',
             formatter_class=argparse.RawDescriptionHelpFormatter,
-            epilog='Para ver ejemplos de uso: python3 %(prog)s --examples'
+            epilog=print_examples()
         )
         
         parser.add_argument(
             'yaml_file',
             help='Input YAML report file'
-        )
-
-        parser.add_argument(
-            '--examples',
-            action='store_true',
-            help='Muestra ejemplos de uso del programa'
         )
         
         parser.add_argument(
@@ -1369,10 +1363,6 @@ class CLIApplication(object):
             sys.exit(0)
 
         self.args = parser.parse_args()
-
-        if self.args.examples:
-            print_examples()
-            sys.exit(0)
     
     def _validate_input(self):
         """Validate input parameters"""
