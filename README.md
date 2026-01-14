@@ -17,13 +17,13 @@ Se recomienda utilizar un entorno virtual para aislar dependencias y o tener que
 Dar permisos de ejecución al script de setup.
 
 ```bash
-chmod +x ./setup.sh
+$ chmod +x ./setup.sh
 ```
 
 Ejecutar el script de setup
 
 ```bash
-./setup.sh
+$ ./setup.sh
 ```
 
 ### 2. Instalación manual
@@ -31,7 +31,7 @@ Ejecutar el script de setup
 #### Crear un entorno virtual de python:
 
 ```bash
-python3 -m venv venv
+$ python3 -m venv venv
 ```
 
 #### Activar el entorno virtual:
@@ -39,13 +39,13 @@ python3 -m venv venv
 **Linux / macOS**
 
 ```bash
-source venv/bin/activate
+$ source venv/bin/activate
 ```
 
 **Windows**
 
 ```bash
-venv\Scripts\activate
+$ venv\Scripts\activate
 ```
 
 #### Instalar dependencias
@@ -53,10 +53,10 @@ venv\Scripts\activate
 Todas las dependencias necesarias están listadas en `requirements.txt`.
 
 ```bash
-pip install -r requirements.txt
+$ pip install -r requirements.txt
 ```
 
-## Crear listado de paquetes y librerías dinámicas (pkg: <lib_name\>.so) (so_scanner.py)
+## Crear listado de paquetes y librerías dinámicas {pkg: <lib_name\>.so, ...}(so_scanner.py)
 
 ### Requisitos
 
@@ -76,13 +76,13 @@ Al ejecutar el script este busca en el sistema todas las librerías dinamicas qu
 
 El script se puede ejecutar de la siguiente manera:
 ```bash
-python3 so_scanner.py -v -w 64 --pretty -o libraries.json
+$ python3 so_scanner.py -v -w 64 --pretty -o libraries.json
 ```
 
 Se puede obtener toda la información para la ejecución del script mediante:
 
 ```bash
-python3 so_scanner.py -h
+$ python3 so_scanner.py -h
 ```
 
 ```bash
@@ -163,11 +163,11 @@ REQUISITOS:
 ```
 
 
-## Extraer paquetes desde listado de librerías (XML) (extract_libs.py)
+## Extraer paquetes desde árbol de librerías (XML) o DPKG status file (TXT) (extract_libs.py)
 
 ### Requisitos
 
-El script `extract_libs.py` precisa de los siguientes ficheros de datos y establecer las variables de entorno definidas en el apartado de configuración, esto es importante si se requiere el mapeo de librerías a paquetes, de vital importancia para el procesamiento de archivos XML extraidos con el script de bash `ldd_recursive.sh`, ya que sin esto solamente aparecerá la informacion de librerías dinamicas.
+El script `extract_libs.py` precisa de los siguientes ficheros de datos y establecer las variables de entorno definidas en el apartado de configuración, esto es importante si se requiere el mapeo de librerías a paquetes, de vital importancia para el procesamiento de archivos XML extraidos con el script de bash `ldd_recursive.sh` o en su defecto archivos generados por el gestor de dependencias DPKG (dpkg_statis), ya que sin esto solamente aparecerá la informacion de librerías dinamicas sin ningúna referencia a los paquetes del sistema.
 
 - Fichero donde se especifiquen el contenido de librerías de cada paquete en formato JSON ([Ver ejemplo de esquema aqui](#inventario-de-paqueteslibrerías-en-json)).
 
@@ -180,13 +180,13 @@ Antes de ejecutar el script se deben establecer las variables de entorno que se 
 Estos hacen referencia  primeramente al directorio donde se ubican las listas con los mapeos de nombres de librerías (.so) a paquetes.
 
 ```bash
-export LIBS_DIR="/"
+$ export LIBS_DIR="/"
 ```
 
 Y también el report completo del firmware o BSP extraído del sistema (linux) donde se ejecutará la aplicación, en el caso de que sea posible y se tenga acceso al fichero.
 
 ```bash
-export PTX_REPORT="/"
+$ export PTX_REPORT="/"
 ```
 
 ### Uso
@@ -202,19 +202,19 @@ El script requiere de diversos argumentos para su ejecución.
 Ejemplo **XML**:
 
 ```bash
-python3 extract_libs.py xml <ldd_resultfile.xml> --lib-lists /path/to/dir --bsp-report base_report.yaml -j <complist.json> -t <report.txt> -y <report.yaml>
+$ python3 extract_libs.py xml <ldd_resultfile.xml> --lib-lists /path/to/dir --bsp-report base_report.yaml -j <complist.json> -t <report.txt> -y <report.yaml>
 ```
 
 Ejemplo **DPKG**:
 
 ```bash
-python3 cyclonedx_converter.py dpkg <dpkg_status.txt> --dpkg-name NAME --dpkg-vers VERSION -j <complist.json> -t <report.txt> -y <report.yaml>
+$ python3 cyclonedx_converter.py dpkg <dpkg_status.txt> --dpkg-name NAME --dpkg-vers VERSION -j <complist.json> -t <report.txt> -y <report.yaml>
 ```
 
 Se puede obtener toda la información para la ejecución del script mediante:
 
 ```bash
-python3 extract_libs.py -h
+$ python3 extract_libs.py -h
 ```
 
 ```bash
@@ -277,8 +277,8 @@ Esto se debe de hacer mendiante las variables de entorno, configurando el endpoi
 La API key sirve para tener un rate limit ampliado, el cuál está limitado por las reglas de firewall de NIST. Con una API key se obtiene una rate limit de 50 requests por 30 segundos frente a los 5 requests por 30 segundos (sin API key). Se puede obtener en la siguiente url [Request an API Key](https://nvd.nist.gov/developers/request-an-api-key).
 
 ```bash
-export API_KEY="tu_api_key"
-export TARGET_URL="https://services.nvd.nist.gov/rest/json/cpes/2.0"
+$ export API_KEY="tu_api_key"
+$ export TARGET_URL="https://services.nvd.nist.gov/rest/json/cpes/2.0"
 ```
 
 ### Uso
@@ -294,13 +294,13 @@ El script requiere de diversos argumentos para su ejecución.
 Ejemplo:
 
 ```bash
-python3 cyclonedx_converter.py -t ptx full-bsp-report.yaml -o bsp-sbom.json
+$ python3 cyclonedx_converter.py -t ptx full-bsp-report.yaml -o bsp-sbom.json
 ```
 
 Se puede obtener toda la información para la ejecución del script mediante:
 
 ```bash
-python3 cyclonedx_converter.py -h
+$ python3 cyclonedx_converter.py -h
 ```
 
 ```bash
@@ -377,13 +377,13 @@ Para utilizar el siguiente script, solamente se necesita copiar el script de BAS
 Dar permisos de ejecución al script.
 
 ```bash
-chmod +x ./ldd_recursive.sh
+$ chmod +x ./ldd_recursive.sh
 ```
 
 Ejecutar el script, introduciendo el path a la aplicación, el nombre de la aplicación y un directorio donde se guardará los ficheros de salida.
 
 ```bash
-./ldd_recursive.sh /ruta/a/ejecutable <elf_name> /directorio/output
+$ ./ldd_recursive.sh /ruta/a/ejecutable <elf_name> /directorio/output
 ```
 
 ## Esquemas utilizados en el script
