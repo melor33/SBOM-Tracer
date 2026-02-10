@@ -208,7 +208,7 @@ $ python3 extract_libs.py xml <ldd_resultfile.xml> --lib-lists /path/to/dir --bs
 Ejemplo **DPKG**:
 
 ```bash
-$ python3 cyclonedx_converter.py dpkg <dpkg_status.txt> --dpkg-name NAME --dpkg-vers VERSION -j <complist.json> -t <report.txt> -y <report.yaml>
+$ python3 extract_libs.py dpkg <dpkg_status.txt> --dpkg-name NAME --dpkg-vers VERSION -j <complist.json> -t <report.txt> -y <report.yaml>
 ```
 
 Se puede obtener toda la información para la ejecución del script mediante:
